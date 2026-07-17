@@ -1,0 +1,13 @@
+{
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "npm run build"
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "healthcheckPath": "/api/health",
+    "healthcheckInterval": 30,
+    "healthcheckTimeout": 5,
+    "healthcheckRetries": 3
+  }
+}
