@@ -8,7 +8,8 @@
     "dev:worker": "tsx watch server/workers/worker.ts",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:worker\" \"npm run dev:next\"",
     "build": "next build && tsc -p server/tsconfig.json",
-    "start": "concurrently \"node server/dist/index.js\" \"node server/dist/workers/worker.js\" \"next start\"",
+    "start": "concurrently \"npm run start:fastify\" \"next start\"",
+    "start:fastify": "node server/dist/index.js"
     "postinstall": "prisma generate",
     "migrate": "prisma migrate dev"
   },
