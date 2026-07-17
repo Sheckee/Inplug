@@ -9,7 +9,7 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:worker\" \"npm run dev:next\"",
     "build": "next build && tsc -p server/tsconfig.json",
     "start": "concurrently \"npm run start:fastify\" \"next start\"",
-    "start:fastify": "node server/dist/index.js"
+    "start:fastify": "node server/dist/index.js",
     "postinstall": "prisma generate",
     "migrate": "prisma migrate dev"
   },
