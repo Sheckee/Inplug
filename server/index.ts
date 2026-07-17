@@ -13,10 +13,10 @@ const taskQueue = new Queue('agent-tasks', { connection: redis });
 const server = Fastify({ logger: true });
 server.register(cors, { origin: '*' });
 
-// ------------------ HEALTH CHECK ------------------
+// HEALTH CHECK
 server.get('/api/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 
-// ------------------ AGENT CRUD ------------------
+// AGENT CRUD
 server.get('/api/agents', async () => {
   const agents = await prisma.agent.findMany({
     where: { workspaceId: 'default' },
@@ -41,14 +41,13 @@ server.post('/api/agents', async (req, reply) => {
   return reply.send(agent);
 });
 
-// ------------------ TASK EXECUTION (QUEUE) ------------------
+// TASK EXECUTION
 server.post('/api/agents/:id/execute', async (req, reply) => {
   const { id } = req.params as { id: string };
   const { task } = req.body as { task: string };
 
   if (!task) return reply.status(400).send({ error: 'Task is required' });
 
-  // Update DB status to 'working'
   await prisma.agent.update({
     where: { id },
     data: { status: 'working' },
@@ -58,8 +57,7 @@ server.post('/api/agents/:id/execute', async (req, reply) => {
   return reply.send({ message: 'Task queued', agentId: id });
 });
 
-// ------------------ SSE STREAMING (REAL-TIME AI RESPONSE) ------------------
-server.get('/api/agents/:id/stream', async (req, reply) => {
+// SSE STREAMING
 server.get('/api/agents/:id/stream', async (req, reply) => {
   const { id } = req.params as { id: string };
   const task = (req.query as any).task || 'Explain quantum computing in simple terms.';
@@ -124,7 +122,8 @@ server.get('/api/agents/:id/stream', async (req, reply) => {
     reply.raw.end();
   }
 });
-// ------------------ WORKFLOW CRUD ------------------
+
+// WORKFLOW CRUD
 server.post('/api/workflows', async (req, reply) => {
   const { name, definition } = req.body as any;
   const workflow = await prisma.workflow.create({
@@ -143,7 +142,7 @@ server.get('/api/workflows', async () => {
   });
 });
 
-// ------------------ START SERVER ------------------
+// START SERVER
 const start = async () => {
   try {
     await server.listen({ port: 3001, host: '0.0.0.0' });
