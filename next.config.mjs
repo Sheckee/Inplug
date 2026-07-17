@@ -2,8 +2,13 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['framer-motion'],
-  experimental: {
-    appDir: true,
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:3001/api/:path*', // Forward to Fastify
+      },
+    ];
   },
 };
 
