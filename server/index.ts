@@ -60,8 +60,20 @@ server.post('/api/agents/:id/execute', async (req, reply) => {
 
 // ------------------ SSE STREAMING (REAL-TIME AI RESPONSE) ------------------
 server.get('/api/agents/:id/stream', async (req, reply) => {
+server.get('/api/agents/:id/stream', async (req, reply) => {
   const { id } = req.params as { id: string };
   const task = (req.query as any).task || 'Explain quantum computing in simple terms.';
+
+  const agent = await prisma.agent.findUnique({
+    where: { id },
+  });
+  if (!agent) {
+    reply.raw.write(`event: error\ndata: ${JSON.stringify({ error: 'Agent not found' })}\n\n`);
+    reply.raw.end();
+    return;
+  }
+
+  const model = agent.model || 'openai';
 
   reply.raw.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -73,7 +85,7 @@ server.get('/api/agents/:id/stream', async (req, reply) => {
 
   try {
     const messages = [{ role: 'user', content: task }];
-    const openAIStream = await streamModel(messages, 'openai');
+    const openAIStream = await streamModel(messages, model);
     const reader = openAIStream.getReader();
     const decoder = new TextDecoder();
 
@@ -95,7 +107,6 @@ server.get('/api/agents/:id/stream', async (req, reply) => {
           }
         }
       }
-      // Update DB to idle
       await prisma.agent.update({
         where: { id },
         data: { status: 'idle' },
@@ -113,7 +124,6 @@ server.get('/api/agents/:id/stream', async (req, reply) => {
     reply.raw.end();
   }
 });
-
 // ------------------ WORKFLOW CRUD ------------------
 server.post('/api/workflows', async (req, reply) => {
   const { name, definition } = req.body as any;
