@@ -10,4 +10,5 @@ export const env = {
   GROQ_API_KEY: process.env.GROQ_API_KEY,
   DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
   OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+  NVIDIA_API_KEY: process.env.NVIDIA_API_KEY,
 };
