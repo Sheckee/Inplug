@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600&display=swap');
+
+:root {
+  --bg: #0D1117;
+  --panel: #161B22;
+  --accent: #6EE7B7;
+  --danger: #FF5F56;
+  --warning: #FBBF24;
+  --info: #60A5FA;
+}
+
+body {
+  background-color: var(--bg);
+  color: #E6EDF3;
+  font-family: 'Inter', sans-serif;
+}
+
+.pixel-text {
+  font-family: 'Press Start 2P', monospace;
+  letter-spacing: 1px;
+}
+
+.pixel-art {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Pixel Worker Animation */
+@keyframes walk {
+  0% { transform: translateX(0px) translateY(0px); }
+  25% { transform: translateX(10px) translateY(-2px); }
+  50% { transform: translateX(20px) translateY(0px); }
+  75% { transform: translateX(10px) translateY(2px); }
+  100% { transform: translateX(0px) translateY(0px); }
+}
+
+.pixel-worker {
+  width: 24px;
+  height: 32px;
+  background: var(--accent);
+  border: 2px solid #fff;
+  animation: walk 2s steps(4) infinite;
+}
