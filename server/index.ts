@@ -3,47 +3,141 @@ import cors from '@fastify/cors';
 import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
 import { Queue } from 'bullmq';
+import { streamModel } from './services/modelRouter';
+import { env } from './lib/env';
 
 const prisma = new PrismaClient();
-const redis = new Redis(process.env.REDIS_URL!);
+const redis = new Redis(env.REDIS_URL);
 const taskQueue = new Queue('agent-tasks', { connection: redis });
 
 const server = Fastify({ logger: true });
-
 server.register(cors, { origin: '*' });
 
-// Health Check
-server.get('/api/health', async () => ({ status: 'ok', timestamp: new Date() }));
+// ------------------ HEALTH CHECK ------------------
+server.get('/api/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 
-// Routes
+// ------------------ AGENT CRUD ------------------
+server.get('/api/agents', async () => {
+  const agents = await prisma.agent.findMany({
+    where: { workspaceId: 'default' },
+  });
+  return agents;
+});
+
 server.post('/api/agents', async (req, reply) => {
   const { name, role, model, systemPrompt } = req.body as any;
+  if (!name) return reply.status(400).send({ error: 'Name is required' });
+  
   const agent = await prisma.agent.create({
-    data: { name, role, model, systemPrompt, workspaceId: 'default' }
+    data: {
+      name,
+      role: role || 'Worker',
+      model: model || 'openai',
+      systemPrompt: systemPrompt || 'You are a helpful assistant.',
+      workspaceId: 'default',
+      status: 'idle',
+    },
   });
   return reply.send(agent);
 });
 
+// ------------------ TASK EXECUTION (QUEUE) ------------------
 server.post('/api/agents/:id/execute', async (req, reply) => {
   const { id } = req.params as { id: string };
   const { task } = req.body as { task: string };
-  
+
+  if (!task) return reply.status(400).send({ error: 'Task is required' });
+
+  // Update DB status to 'working'
+  await prisma.agent.update({
+    where: { id },
+    data: { status: 'working' },
+  });
+
   await taskQueue.add('execute', { agentId: id, task });
   return reply.send({ message: 'Task queued', agentId: id });
 });
 
-// AI Model Router (simplified)
-import { modelRouter } from './services/modelRouter';
-server.post('/api/chat', async (req, reply) => {
-  const { messages, model } = req.body as any;
-  const response = await modelRouter(messages, model);
-  return reply.send(response);
+// ------------------ SSE STREAMING (REAL-TIME AI RESPONSE) ------------------
+server.get('/api/agents/:id/stream', async (req, reply) => {
+  const { id } = req.params as { id: string };
+  const task = (req.query as any).task || 'Explain quantum computing in simple terms.';
+
+  reply.raw.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+  });
+
+  reply.raw.write(`event: status\ndata: ${JSON.stringify({ agentId: id, status: 'thinking' })}\n\n`);
+
+  try {
+    const messages = [{ role: 'user', content: task }];
+    const openAIStream = await streamModel(messages, 'openai');
+    const reader = openAIStream.getReader();
+    const decoder = new TextDecoder();
+
+    async function pump() {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+            try {
+              const data = JSON.parse(line.slice(6));
+              const token = data.choices?.[0]?.delta?.content || '';
+              if (token) {
+                reply.raw.write(`event: token\ndata: ${JSON.stringify({ token })}\n\n`);
+              }
+            } catch (e) { /* ignore parse errors */ }
+          }
+        }
+      }
+      // Update DB to idle
+      await prisma.agent.update({
+        where: { id },
+        data: { status: 'idle' },
+      });
+      reply.raw.write(`event: status\ndata: ${JSON.stringify({ agentId: id, status: 'idle' })}\n\n`);
+      reply.raw.end();
+    }
+    pump();
+  } catch (err) {
+    await prisma.agent.update({
+      where: { id },
+      data: { status: 'error' },
+    });
+    reply.raw.write(`event: error\ndata: ${JSON.stringify({ error: (err as Error).message })}\n\n`);
+    reply.raw.end();
+  }
 });
 
+// ------------------ WORKFLOW CRUD ------------------
+server.post('/api/workflows', async (req, reply) => {
+  const { name, definition } = req.body as any;
+  const workflow = await prisma.workflow.create({
+    data: {
+      name: name || 'Untitled',
+      definition,
+      workspaceId: 'default',
+    },
+  });
+  return reply.send(workflow);
+});
+
+server.get('/api/workflows', async () => {
+  return prisma.workflow.findMany({
+    where: { workspaceId: 'default' },
+  });
+});
+
+// ------------------ START SERVER ------------------
 const start = async () => {
   try {
     await server.listen({ port: 3001, host: '0.0.0.0' });
-    console.log('Server listening on http://localhost:3001');
+    console.log('🚀 Server listening on http://localhost:3001');
   } catch (err) {
     server.log.error(err);
     process.exit(1);
