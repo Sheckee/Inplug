@@ -6,10 +6,16 @@ import { Queue } from 'bullmq';
 import { streamModel } from './services/modelRouter';
 import { env } from './lib/env';
 
+console.log('⚙️ Initializing Prisma client...');
 const prisma = new PrismaClient();
+
+console.log('⚙️ Connecting to Redis...');
 const redis = new Redis(env.REDIS_URL);
+
+console.log('⚙️ Creating BullMQ queue...');
 const taskQueue = new Queue('agent-tasks', { connection: redis });
 
+console.log('⚙️ Creating Fastify server...');
 const server = Fastify({ logger: true });
 server.register(cors, { origin: '*' });
 
@@ -144,10 +150,12 @@ server.get('/api/workflows', async () => {
 
 // START SERVER
 const start = async () => {
+  console.log('🚀 Attempting to start Fastify server...');
   try {
     await server.listen({ port: 3001, host: '0.0.0.0' });
-    console.log('🚀 Server listening on http://localhost:3001');
+    console.log('✅ Fastify server is running on http://localhost:3001');
   } catch (err) {
+    console.error('❌ Fastify failed to start:', err);
     server.log.error(err);
     process.exit(1);
   }
