@@ -2,46 +2,95 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
 
 :root {
-  --bg: #0D1117;
-  --panel: #161B22;
-  --accent: #6EE7B7;
-  --danger: #FF5F56;
-  --warning: #FBBF24;
-  --info: #60A5FA;
+  --bg: #DCEFD9;
+  --panel: #F5EFE0;
+  --accent: #E8B84B;
+  --danger: #C9673F;
+  --warning: #E8B84B;
+  --info: #6FB8C9;
+
+  --forest: #3F6C4C;
+  --forest-dark: #2E4A2F;
+  --brown: #8B5E3C;
+  --brown-dark: #6B4226;
+  --cream: #F5EFE0;
+  --beige: #E8DCC4;
+  --river: #6FB8C9;
+  --gold: #E8B84B;
+  --stone: #A6A29B;
 }
 
 body {
   background-color: var(--bg);
-  color: #E6EDF3;
+  color: #3A2A18;
   font-family: 'Inter', sans-serif;
 }
 
+.font-display {
+  font-family: 'Baloo 2', 'Inter', sans-serif;
+}
+
 .pixel-text {
-  font-family: 'Press Start 2P', monospace;
-  letter-spacing: 1px;
+  font-family: 'Baloo 2', sans-serif;
+  letter-spacing: 0.2px;
+}
+
+/* ---- Village world animations ------------------------------------- */
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes walkBounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(-1deg); }
+}
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes smoke {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0.8; }
+  100% { transform: translate(6px, -26px) scale(1.4); opacity: 0; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.12); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+@keyframes driftCloud {
+  from { transform: translateX(0); }
+  to { transform: translateX(140vw); }
+}
+
+@keyframes rainDrop {
+  0% { transform: translateY(0); opacity: 0.8; }
+  100% { transform: translateY(60vh); opacity: 0; }
+}
+
+@keyframes shimmer {
+  0% { transform: translateY(-60px); }
+  100% { transform: translateY(60px); }
 }
 
 .pixel-art {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-}
-
-/* Pixel Worker Animation */
-@keyframes walk {
-  0% { transform: translateX(0px) translateY(0px); }
-  25% { transform: translateX(10px) translateY(-2px); }
-  50% { transform: translateX(20px) translateY(0px); }
-  75% { transform: translateX(10px) translateY(2px); }
-  100% { transform: translateX(0px) translateY(0px); }
-}
-
-.pixel-worker {
-  width: 24px;
-  height: 32px;
-  background: var(--accent);
-  border: 2px solid #fff;
-  animation: walk 2s steps(4) infinite;
 }

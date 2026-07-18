@@ -16,31 +16,34 @@ import Link from 'next/link';
 
 const nodeTypes = {
   prompt: ({ data }: any) => (
-    <div className="p-3 bg-panel border-2 border-accent/30 rounded-lg w-40 text-center pixel-text text-xs text-gray-300 shadow-lg">
-      📝 {data.label}
+    <div className="px-4 py-3 bg-[#F5EFE0] border-2 border-[#E8B84B] rounded-2xl w-44 text-center font-display text-xs text-[#3A2A18] shadow-md">
+      <div className="text-lg mb-1">🏛</div>
+      {data.label}
     </div>
   ),
   search: ({ data }: any) => (
-    <div className="p-3 bg-panel border-2 border-info/30 rounded-lg w-40 text-center pixel-text text-xs text-gray-300 shadow-lg">
-      🔍 {data.label}
+    <div className="px-4 py-3 bg-[#F5EFE0] border-2 border-[#5B8C5A] rounded-2xl w-44 text-center font-display text-xs text-[#3A2A18] shadow-md">
+      <div className="text-lg mb-1">🌾</div>
+      {data.label}
     </div>
   ),
   tool: ({ data }: any) => (
-    <div className="p-3 bg-panel border-2 border-warning/30 rounded-lg w-40 text-center pixel-text text-xs text-gray-300 shadow-lg">
-      🛠️ {data.label}
+    <div className="px-4 py-3 bg-[#F5EFE0] border-2 border-[#8B5E3C] rounded-2xl w-44 text-center font-display text-xs text-[#3A2A18] shadow-md">
+      <div className="text-lg mb-1">⚒</div>
+      {data.label}
     </div>
   ),
 };
 
 const initialNodes = [
-  { id: '1', type: 'prompt', position: { x: 100, y: 100 }, data: { label: 'System Prompt' } },
-  { id: '2', type: 'search', position: { x: 300, y: 100 }, data: { label: 'Web Search' } },
-  { id: '3', type: 'tool', position: { x: 500, y: 100 }, data: { label: 'Code Exec' } },
+  { id: '1', type: 'prompt', position: { x: 100, y: 100 }, data: { label: 'Village Hall -- receives the request' } },
+  { id: '2', type: 'search', position: { x: 380, y: 100 }, data: { label: 'Research Farm -- gathers context' } },
+  { id: '3', type: 'tool', position: { x: 660, y: 100 }, data: { label: 'Workshop -- builds the answer' } },
 ];
 
 const initialEdges = [
-  { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: '#6EE7B7' } },
-  { id: 'e2-3', source: '2', target: '3', animated: true, style: { stroke: '#6EE7B7' } },
+  { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: '#E8B84B', strokeWidth: 2 } },
+  { id: 'e2-3', source: '2', target: '3', animated: true, style: { stroke: '#E8B84B', strokeWidth: 2 } },
 ];
 
 export default function WorkflowBuilder() {
@@ -52,11 +55,13 @@ export default function WorkflowBuilder() {
   useEffect(() => {
     fetch('/api/workflows')
       .then((res) => res.json())
-      .then(setSavedWorkflows);
+      .then(setSavedWorkflows)
+      .catch(() => {});
   }, []);
 
   const onConnect = useCallback(
-    (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
+    (params: Edge | Connection) =>
+      setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: '#E8B84B', strokeWidth: 2 } }, eds)),
     [setEdges]
   );
 
@@ -70,23 +75,32 @@ export default function WorkflowBuilder() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    alert('✅ Workflow saved!');
+    alert('📜 Workflow trail saved!');
   };
 
   return (
-    <div className="w-screen h-screen bg-bg p-4 flex flex-col">
+    <div
+      className="w-screen h-screen p-4 flex flex-col"
+      style={{ background: 'linear-gradient(180deg, #DCEFD9 0%, #EAF3D8 100%)' }}
+    >
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl pixel-text text-accent">Workflow Builder</h1>
-        <div className="flex gap-4">
-          <Link href="/" className="text-sm pixel-text text-gray-400 hover:text-white">
-            ← Back to Office
-          </Link>
+        <div>
+          <h1 className="text-xl font-display text-[#3A2A18]">🪧 Workflow Trail</h1>
+          <p className="text-xs text-[#8B5E3C] mt-0.5">
+            Lay out the path a quest takes through the village: User → Village Hall → Research Farm → Workshop → … → Response
+          </p>
         </div>
+        <Link
+          href="/"
+          className="text-sm font-display text-[#3A2A18] bg-[#F5EFE0] border-2 border-[#C9BC9C] rounded-xl px-4 py-2 hover:bg-[#E8DCC4] transition-colors shadow"
+        >
+          ← Back to Village
+        </Link>
       </div>
 
-      <div className="flex flex-1 gap-4">
+      <div className="flex flex-1 gap-4 min-h-0">
         {/* Main Canvas */}
-        <div className="flex-[3] border-2 border-panel rounded-lg overflow-hidden relative">
+        <div className="flex-[3] border-2 border-[#C9BC9C] rounded-2xl overflow-hidden relative shadow-lg">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -97,34 +111,40 @@ export default function WorkflowBuilder() {
             fitView
           >
             <Controls />
-            <MiniMap />
-            <Background color="#161B22" gap={20} />
+            <MiniMap maskColor="rgba(220, 239, 217, 0.6)" nodeColor="#E8B84B" />
+            <Background color="#B7A87E" gap={22} />
           </ReactFlow>
         </div>
 
         {/* Side Panel */}
-        <div className="flex-1 bg-panel/50 border border-panel rounded-lg p-4 flex flex-col gap-4">
+        <div className="flex-1 bg-[#F5EFE0] border-2 border-[#C9BC9C] rounded-2xl p-4 flex flex-col gap-4 shadow-lg overflow-y-auto">
           <div>
-            <label className="text-xs pixel-text text-gray-400">Workflow Name</label>
+            <label className="text-xs font-display text-[#8B5E3C]">Trail Name</label>
             <input
               type="text"
               value={workflowName}
               onChange={(e) => setWorkflowName(e.target.value)}
-              className="w-full bg-bg border border-gray-700 px-3 py-2 rounded text-sm text-gray-300 mt-1"
+              className="w-full bg-white/60 border border-[#C9BC9C] px-3 py-2 rounded-lg text-sm text-[#3A2A18] mt-1 focus:outline-none focus:border-[#E8B84B]"
             />
           </div>
           <button
             onClick={handleSave}
-            className="w-full bg-accent text-black py-2 rounded pixel-text text-sm hover:bg-accent/80"
+            className="w-full bg-[#5B8C5A] hover:bg-[#4F7D51] text-[#F5EFE0] py-2.5 rounded-xl font-display text-sm shadow transition-colors"
           >
-            SAVE WORKFLOW
+            Save Trail
           </button>
-          <div className="mt-4">
-            <h3 className="text-xs pixel-text text-gray-400 mb-2">Saved Workflows</h3>
+          <div className="mt-2">
+            <h3 className="text-xs font-display text-[#8B5E3C] mb-2">Saved Trails</h3>
             <ul className="space-y-2">
+              {savedWorkflows.length === 0 && (
+                <li className="text-xs text-[#8B5E3C]/70">No trails saved yet.</li>
+              )}
               {savedWorkflows.map((wf: any) => (
-                <li key={wf.id} className="text-xs text-gray-300 bg-panel/30 p-2 rounded border border-gray-700">
-                  {wf.name}
+                <li
+                  key={wf.id}
+                  className="text-xs text-[#3A2A18] bg-white/50 p-2.5 rounded-lg border border-[#E8DCC4]"
+                >
+                  🪧 {wf.name}
                 </li>
               ))}
             </ul>
