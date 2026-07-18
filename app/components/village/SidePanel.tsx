@@ -56,15 +56,15 @@ export default function SidePanel({
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 340, opacity: 0 }}
           transition={{ type: 'spring', damping: 26, stiffness: 260 }}
-          className="absolute top-0 right-0 h-full w-[320px] z-40 p-3"
+          className="safe-top safe-bottom absolute top-0 right-0 h-full w-full sm:w-[320px] z-40 p-2 sm:p-3"
         >
           <div className="h-full rounded-2xl bg-[#F5EFE0] border-2 border-[#C9BC9C] shadow-2xl flex flex-col overflow-hidden">
             <div className="flex items-start justify-between p-4 pb-2">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <Portrait color={villager.building.wallRight} accent={villager.building.glow} icon={villager.building.icon} />
-                <div>
-                  <div className="font-display text-base text-[#3A2A18] leading-tight">{villager.agent.name}</div>
-                  <div className="text-xs text-[#8B5E3C]">{villager.agent.role}</div>
+                <div className="min-w-0">
+                  <div className="font-display text-base text-[#3A2A18] leading-tight truncate">{villager.agent.name}</div>
+                  <div className="text-xs text-[#8B5E3C] truncate">{villager.agent.role}</div>
                   <div className="flex items-center gap-1 mt-1">
                     <span
                       className="w-1.5 h-1.5 rounded-full"
@@ -76,7 +76,10 @@ export default function SidePanel({
                   </div>
                 </div>
               </div>
-              <button onClick={onClose} className="text-[#8B5E3C] hover:text-[#3A2A18] text-lg leading-none px-1">
+              <button
+                onClick={onClose}
+                className="text-[#8B5E3C] hover:text-[#3A2A18] active:text-[#3A2A18] text-lg leading-none w-9 h-9 shrink-0 flex items-center justify-center -mr-1.5 -mt-1"
+              >
                 ✕
               </button>
             </div>
