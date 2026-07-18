@@ -41,11 +41,15 @@ export default function Home() {
   const [weather, setWeather] = useState<'clear' | 'rain'>('clear');
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isMobile, setIsMobile] = useState(false);
 
   const lastTaskRef = useRef('');
   const prevStatusRef = useRef<'idle' | 'thinking' | 'working'>('idle');
   const draggingRef = useRef(false);
   const lastPointerRef = useRef({ x: 0, y: 0 });
+  const activePointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const pinchStartDistRef = useRef<number | null>(null);
+  const pinchStartZoomRef = useRef(1);
 
   const { tokens, status, fullText } = useAgentStream(activeAgentId || '');
 
@@ -55,6 +59,26 @@ export default function Home() {
     // person's own day/night actually looks -- toggle button overrides it.
     const hour = new Date().getHours();
     setIsNight(hour < 6 || hour >= 19);
+  }, []);
+
+  // Fit the whole village on-screen for small phone viewports, and keep
+  // tracking screen size so the HUD/panels can adapt too.
+  useEffect(() => {
+    const fitToScreen = () => {
+      const w = window.innerWidth;
+      const mobile = w < 640;
+      setIsMobile(mobile);
+      const fit = clamp(Math.min(w / WORLD_W, window.innerHeight / WORLD_H) * 0.92, 0.4, 1);
+      setZoom(mobile ? fit : 1);
+      setPan({ x: 0, y: 0 });
+    };
+    fitToScreen();
+    window.addEventListener('resize', fitToScreen);
+    window.addEventListener('orientationchange', fitToScreen);
+    return () => {
+      window.removeEventListener('resize', fitToScreen);
+      window.removeEventListener('orientationchange', fitToScreen);
+    };
   }, []);
 
   const villagers = useMemo(() => assignVillagers(agents), [agents]);
@@ -101,24 +125,63 @@ export default function Home() {
     if (defaultRunAgentId) handleRun(defaultRunAgentId, taskInput);
   };
 
-  // --- pan & zoom -----------------------------------------------------
-  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    draggingRef.current = true;
-    lastPointerRef.current = { x: e.clientX, y: e.clientY };
-    (e.target as Element).setPointerCapture?.(e.pointerId);
+  // --- pan & zoom (mouse drag + wheel, or touch drag + pinch) ---------
+  const pointerDist = () => {
+    const pts = Array.from(activePointersRef.current.values());
+    if (pts.length < 2) return null;
+    const dx = pts[0].x - pts[1].x;
+    const dy = pts[0].y - pts[1].y;
+    return Math.hypot(dx, dy);
   };
+
+  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+
+    if (activePointersRef.current.size === 2) {
+      draggingRef.current = false;
+      pinchStartDistRef.current = pointerDist();
+      pinchStartZoomRef.current = zoom;
+    } else if (activePointersRef.current.size === 1) {
+      draggingRef.current = true;
+      lastPointerRef.current = { x: e.clientX, y: e.clientY };
+    }
+  };
+
   const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (!activePointersRef.current.has(e.pointerId)) return;
+    activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (activePointersRef.current.size === 2) {
+      const dist = pointerDist();
+      if (dist && pinchStartDistRef.current) {
+        const scale = dist / pinchStartDistRef.current;
+        setZoom(clamp(pinchStartZoomRef.current * scale, 0.4, 1.8));
+      }
+      return;
+    }
+
     if (!draggingRef.current) return;
     const dx = e.clientX - lastPointerRef.current.x;
     const dy = e.clientY - lastPointerRef.current.y;
     lastPointerRef.current = { x: e.clientX, y: e.clientY };
     setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
   };
-  const onPointerUp = () => {
-    draggingRef.current = false;
+
+  const endPointer = (e: PointerEvent<HTMLDivElement>) => {
+    activePointersRef.current.delete(e.pointerId);
+    pinchStartDistRef.current = null;
+    if (activePointersRef.current.size === 1) {
+      const remaining = Array.from(activePointersRef.current.values())[0];
+      lastPointerRef.current = remaining;
+      draggingRef.current = true;
+    } else {
+      draggingRef.current = false;
+    }
   };
+
   const onWheel = (e: WheelEvent<HTMLDivElement>) => {
-    setZoom((z) => clamp(z - e.deltaY * 0.0012, 0.6, 1.8));
+    setZoom((z) => clamp(z - e.deltaY * 0.0012, 0.4, 1.8));
   };
 
   return (
@@ -127,10 +190,12 @@ export default function Home() {
 
       <div
         className="absolute inset-0 flex items-center justify-center cursor-grab active:cursor-grabbing"
+        style={{ touchAction: 'none' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerLeave={onPointerUp}
+        onPointerUp={endPointer}
+        onPointerLeave={endPointer}
+        onPointerCancel={endPointer}
         onWheel={onWheel}
       >
         <div
@@ -208,13 +273,17 @@ export default function Home() {
         onToggleNight={() => setIsNight((n) => !n)}
         weather={weather}
         onToggleWeather={() => setWeather((w) => (w === 'clear' ? 'rain' : 'clear'))}
-        onZoomIn={() => setZoom((z) => clamp(z + 0.15, 0.6, 1.8))}
-        onZoomOut={() => setZoom((z) => clamp(z - 0.15, 0.6, 1.8))}
+        onZoomIn={() => setZoom((z) => clamp(z + 0.15, 0.4, 1.8))}
+        onZoomOut={() => setZoom((z) => clamp(z - 0.15, 0.4, 1.8))}
         onResetView={() => {
-          setZoom(1);
+          const fit = isMobile
+            ? clamp(Math.min(window.innerWidth / WORLD_W, window.innerHeight / WORLD_H) * 0.92, 0.4, 1)
+            : 1;
+          setZoom(fit);
           setPan({ x: 0, y: 0 });
         }}
         villagerCount={villagers.length}
+        isMobile={isMobile}
       />
 
       <SidePanel
@@ -240,4 +309,4 @@ export default function Home() {
       />
     </main>
   );
-                              }
+}
