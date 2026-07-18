@@ -23,10 +23,24 @@
   --stone: #A6A29B;
 }
 
-body {
+html, body {
   background-color: var(--bg);
   color: #3A2A18;
   font-family: 'Inter', sans-serif;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Respect Android/iOS notches & gesture bars for floating UI. */
+.safe-top {
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+.safe-x {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
 }
 
 .font-display {
