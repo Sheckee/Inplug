@@ -253,11 +253,20 @@ export const WATERFALL_TILE = { x: 14, y: 0 };
 export const WINDMILL_TILE = { x: 12, y: 2 };
 
 // --- Decorations: trees / flowers / lanterns scattered deterministically ---
-export type DecorType = 'tree' | 'flower' | 'lantern' | 'bush';
+export type DecorType = 'tree' | 'flower' | 'lantern' | 'bush' | 'rock' | 'crystal';
 export interface DecorItem {
   type: DecorType;
   x: number;
   y: number;
+}
+
+function nearRiver(x: number, y: number): boolean {
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      if (RIVER_TILES.has(key(x + dx, y + dy))) return true;
+    }
+  }
+  return false;
 }
 
 export function generateDecor(): DecorItem[] {
@@ -274,9 +283,22 @@ export function generateDecor(): DecorItem[] {
         if (hashRandom(x, y, 2) < 0.06) items.push({ type: 'lantern', x, y });
         continue;
       }
+      // Rocky banks and crystal clusters hug the riverside, like an outcrop.
+      if (nearRiver(x, y)) {
+        const rr = hashRandom(x, y, 5);
+        if (rr < 0.3) {
+          items.push({ type: 'rock', x, y });
+          continue;
+        }
+        if (rr < 0.45) {
+          items.push({ type: 'crystal', x, y });
+          continue;
+        }
+      }
       if (r < 0.14) items.push({ type: 'tree', x, y });
       else if (r < 0.22) items.push({ type: 'bush', x, y });
       else if (r < 0.3) items.push({ type: 'flower', x, y });
+      else if (r < 0.33 && nearRiver(x, y)) items.push({ type: 'rock', x, y });
     }
   }
   return items;
