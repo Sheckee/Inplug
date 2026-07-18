@@ -240,4 +240,148 @@ export default function Home() {
       />
     </main>
   );
+          }  const defaultRunAgentId = selectedAgentId || villagers[0]?.agent.id || null;
+  const handleDockRun = () => {
+    if (defaultRunAgentId) handleRun(defaultRunAgentId, taskInput);
+  };
+
+  // --- pan & zoom -----------------------------------------------------
+  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    draggingRef.current = true;
+    lastPointerRef.current = { x: e.clientX, y: e.clientY };
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+  };
+  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return;
+    const dx = e.clientX - lastPointerRef.current.x;
+    const dy = e.clientY - lastPointerRef.current.y;
+    lastPointerRef.current = { x: e.clientX, y: e.clientY };
+    setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
+  };
+  const onPointerUp = () => {
+    draggingRef.current = false;
+  };
+  const onWheel = (e: WheelEvent<HTMLDivElement>) => {
+    setZoom((z) => clamp(z - e.deltaY * 0.0012, 0.6, 1.8));
+  };
+
+  return (
+    <main className="w-screen h-screen relative overflow-hidden select-none">
+      <SkyLayer isNight={isNight} weather={weather} />
+
+      <div
+        className="absolute inset-0 flex items-center justify-center cursor-grab active:cursor-grabbing"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerLeave={onPointerUp}
+        onWheel={onWheel}
+      >
+        <div
+          className="relative"
+          style={{
+            width: WORLD_W,
+            height: WORLD_H,
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transformOrigin: 'center center',
+            transition: draggingRef.current ? 'none' : 'transform 0.05s linear',
+          }}
+        >
+          <Ground />
+          <Decor isNight={isNight} />
+
+          {BUILDINGS.map((b) => {
+            const c = buildingCenter(b);
+            const p = toWorld(c.x, c.y);
+            return (
+              <div
+                key={b.id}
+                className="absolute"
+                style={{ left: p.x, top: p.y, zIndex: depthOf(c.x, c.y) * 10 + 5 }}
+              >
+                <Building
+                  def={b}
+                  active={b.id === activeBuildingId}
+                  selected={selectedVillager?.building.id === b.id}
+                  occupied={occupiedBuildingIds.has(b.id)}
+                  onClick={() => {
+                    const v = villagers.find((vv) => vv.building.id === b.id);
+                    if (v) setSelectedAgentId(v.agent.id);
+                  }}
+                />
+              </div>
+            );
+          })}
+
+          {villagers.map((v) => {
+            const isActive = v.agent.id === activeAgentId;
+            const targetGrid = isActive
+              ? entranceOf(v.building.anchor, v.building.footprint)
+              : houseEntrance(HOUSES[v.homeIndex]);
+            const seatOffsetX = v.seatIndex * 0.4;
+            const p = toWorld(targetGrid.x + seatOffsetX, targetGrid.y + 0.25);
+
+            let vStatus: VillagerStatus;
+            if (isActive) {
+              vStatus = phase === 'walking' ? 'walking' : phase === 'done' ? 'done' : 'thinking';
+            } else {
+              vStatus = isNight ? 'sleeping' : 'idle';
+            }
+
+            return (
+              <Villager
+                key={v.agent.id}
+                agent={v.agent}
+                color={v.building.wallRight}
+                accent={v.building.glow}
+                icon={v.building.icon}
+                x={p.x}
+                y={p.y}
+                status={vStatus}
+                selected={selectedAgentId === v.agent.id}
+                zIndex={depthOf(targetGrid.x, targetGrid.y)}
+                onClick={() => setSelectedAgentId(v.agent.id)}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      <HUD
+        isNight={isNight}
+        onToggleNight={() => setIsNight((n) => !n)}
+        weather={weather}
+        onToggleWeather={() => setWeather((w) => (w === 'clear' ? 'rain' : 'clear'))}
+        onZoomIn={() => setZoom((z) => clamp(z + 0.15, 0.6, 1.8))}
+        onZoomOut={() => setZoom((z) => clamp(z - 0.15, 0.6, 1.8))}
+        onResetView={() => {
+          setZoom(1);
+          setPan({ x: 0, y: 0 });
+        }}
+        villagerCount={villagers.length}
+      />
+
+      <SidePanel
+        villager={selectedVillager}
+        isActive={!!selectedVillager && selectedVillager.agent.id === activeAgentId}
+        status={status}
+        liveText={tokens.join('')}
+        activeTask={lastTaskRef.current}
+        jobs={selectedVillager ? jobHistory[selectedVillager.agent.id] || [] : []}
+        onClose={() => setSelectedAgentId(null)}
+        onRunHere={() => selectedVillager && handleRun(selectedVillager.agent.id, taskInput)}
+        taskInput={taskInput}
+      />
+
+      <TaskDock
+        taskInput={taskInput}
+        setTaskInput={setTaskInput}
+        onRun={handleDockRun}
+        activeAgentName={activeVillager?.agent.name || null}
+        status={status}
+        preview={tokens.join('').slice(-140)}
+        disabled={!taskInput.trim()}
+      />
+    </main>
+  );
 }
