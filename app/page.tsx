@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent, type WheelEven
 import { useAgentStore, type Agent } from './lib/store';
 import { useAgentStream } from './lib/useAgentStream';
 import { assignVillagers } from './lib/village/assign';
-import { BUILDINGS, HOUSES, buildingCenter, entranceOf, houseEntrance } from './lib/village/layout';
+import { BUILDINGS, HOUSES, buildingCenter, entranceOf, houseEntrance } from './lib/village/map';
 import { toWorld, WORLD_H, WORLD_W, depthOf } from './lib/village/isometric';
 import type { JobRecord } from './lib/village/types';
 import type { VillagerStatus } from './components/village/Villager';
