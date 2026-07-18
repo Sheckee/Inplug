@@ -52,6 +52,30 @@ function Lantern({ lit }: { lit: boolean }) {
   );
 }
 
+function Rock() {
+  return (
+    <svg width="26" height="18" viewBox="0 0 26 18" style={{ overflow: 'visible' }}>
+      <ellipse cx="13" cy="16" rx="11" ry="2" fill="#2E4A2F" opacity="0.25" />
+      <path d="M2,15 L4,7 L10,3 L18,4 L24,10 L22,15 Z" fill="#9A968D" stroke="#6E6A61" strokeWidth="0.6" />
+      <path d="M4,7 L10,3 L14,6 L9,9 Z" fill="#B4B0A6" />
+      <path d="M18,4 L24,10 L20,11 L16,7 Z" fill="#847F75" />
+    </svg>
+  );
+}
+
+function Crystal() {
+  return (
+    <svg width="20" height="26" viewBox="0 0 20 26" style={{ overflow: 'visible' }}>
+      <ellipse cx="10" cy="24" rx="8" ry="2" fill="#2E4A2F" opacity="0.25" />
+      <polygon points="10,0 15,9 12,24 8,24 5,9" fill="#C9A6E8" opacity="0.9" />
+      <polygon points="10,0 15,9 10,10" fill="#E3CBF5" opacity="0.9" />
+      <polygon points="3,12 5,9 8,24 6,23" fill="#A57FCB" opacity="0.85" />
+      <polygon points="17,12 15,9 12,24 14,23" fill="#B98FE0" opacity="0.85" />
+      <circle cx="10" cy="6" r="7" fill="#E3CBF5" opacity="0.25" style={{ filter: 'blur(4px)' }} />
+    </svg>
+  );
+}
+
 function Windmill() {
   return (
     <svg width="52" height="86" viewBox="0 0 52 86" style={{ overflow: 'visible' }}>
@@ -106,6 +130,10 @@ export default function Decor({ isNight }: { isNight: boolean }) {
                   ? 'translate(-11px, -15px)'
                   : it.type === 'lantern'
                   ? 'translate(-6px, -28px)'
+                  : it.type === 'rock'
+                  ? 'translate(-13px, -16px)'
+                  : it.type === 'crystal'
+                  ? 'translate(-10px, -24px)'
                   : 'translate(-7px, -13px)',
               zIndex: z * 10 + 3,
             }}
@@ -114,6 +142,8 @@ export default function Decor({ isNight }: { isNight: boolean }) {
             {it.type === 'bush' && <Bush />}
             {it.type === 'flower' && <Flower hue={(it.x * 7 + it.y * 3) % 10 / 10} />}
             {it.type === 'lantern' && <Lantern lit={isNight} />}
+            {it.type === 'rock' && <Rock />}
+            {it.type === 'crystal' && <Crystal />}
           </div>
         );
       })}
@@ -143,4 +173,4 @@ export default function Decor({ isNight }: { isNight: boolean }) {
       })()}
     </>
   );
-}
+                }
