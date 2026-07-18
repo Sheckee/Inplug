@@ -49,7 +49,36 @@ export default function Ground() {
           <stop offset="0%" stopColor="#7FCBDB" />
           <stop offset="100%" stopColor="#4E9CB0" />
         </linearGradient>
+        <linearGradient id="cliffGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#A9946F" />
+          <stop offset="45%" stopColor="#8B7355" />
+          <stop offset="100%" stopColor="#6B5A42" />
+        </linearGradient>
       </defs>
+
+      {/* rocky canyon walls beneath every river tile, carved-earth strata look */}
+      {tiles
+        .filter((t) => t.kind === 'river')
+        .map((t) => {
+          const p = toWorld(t.x, t.y);
+          const cliffH = 22;
+          const bottom = p.y + TILE_H / 2;
+          const wallPts = [
+            [p.x - TILE_W / 2, p.y],
+            [p.x, bottom],
+            [p.x, bottom + cliffH],
+            [p.x - TILE_W / 2, p.y + cliffH],
+          ]
+            .map((pt) => pt.join(','))
+            .join(' ');
+          return (
+            <g key={`cliff-${key(t.x, t.y)}`}>
+              <polygon points={wallPts} fill="url(#cliffGrad)" opacity={0.9} />
+              <line x1={p.x - TILE_W / 4} y1={p.y + TILE_H / 4 + 6} x2={p.x - TILE_W / 2 + 2} y2={p.y + 6} stroke="#5A4A34" strokeWidth={1} opacity={0.4} />
+            </g>
+          );
+        })}
+
       {tiles.map((t) => {
         const p = toWorld(t.x, t.y);
         const pts = diamondPoints(p.x, p.y, TILE_W, TILE_H);
