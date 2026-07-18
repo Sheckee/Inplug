@@ -64,21 +64,37 @@ export default function Building({ def, active, selected, occupied, scale = 1, o
           viewBox={`0 0 140 ${58 + 70}`}
           style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }}
         >
+          {/* stone foundation */}
+          <polygon points="20,104 70,128 120,104 120,110 70,134 20,110" fill="#7A756A" />
           {/* left wall */}
           <polygon points="22,40 70,64 70,124 22,104" fill={def.wallLeft} />
           {/* right wall */}
           <polygon points="70,64 118,40 118,104 70,124" fill={def.wallRight} />
-          {/* windows */}
-          <rect x="32" y="60" width="14" height="14" rx="2" fill={active ? '#FCE7A6' : '#EDE3C8'} opacity={0.9} />
-          <rect x="86" y="60" width="14" height="14" rx="2" fill={active ? '#FCE7A6' : '#EDE3C8'} opacity={0.9} />
+          {/* wall shading seam */}
+          <polygon points="69,64 71,64 71,124 69,124" fill="#00000022" />
+          {/* windows, two rows with frames */}
+          <rect x="30" y="56" width="15" height="14" rx="2" fill="#4A3220" opacity={0.5} />
+          <rect x="31.5" y="57.5" width="12" height="11" rx="1.5" fill={active ? '#FCE7A6' : '#EDE3C8'} opacity={0.92} />
+          <rect x="85" y="56" width="15" height="14" rx="2" fill="#4A3220" opacity={0.5} />
+          <rect x="86.5" y="57.5" width="12" height="11" rx="1.5" fill={active ? '#FCE7A6' : '#EDE3C8'} opacity={0.92} />
+          <rect x="27" y="86" width="11" height="11" rx="1.5" fill={active ? '#FCE7A6' : '#EDE3C8'} opacity={0.7} />
+          <rect x="102" y="86" width="11" height="11" rx="1.5" fill={active ? '#FCE7A6' : '#EDE3C8'} opacity={0.7} />
+          {/* porch roof over the door */}
+          <polygon points="56,84 70,76 84,84 84,90 70,83 56,90" fill={def.wallLeft} opacity={0.85} />
           {/* door */}
           <rect x="62" y="90" width="16" height="26" rx="3" fill="#4A3220" />
+          <rect x="63.5" y="91.5" width="13" height="23" rx="2" fill="#5A4028" />
+          {/* steps */}
+          <polygon points="59,116 81,116 84,120 56,120" fill="#8A867E" />
           {/* roof / top face */}
           <polygon points="70,4 118,40 70,64 22,40" fill={def.roof} stroke="#3A2A18" strokeOpacity={0.15} strokeWidth="1" />
+          {/* roof overhang shadow line */}
+          <polygon points="22,40 70,64 118,40 118,44 70,68 22,44" fill="#00000022" />
           {/* ridge cap */}
           <polygon points="70,4 96,22 70,34 44,22" fill="#00000022" />
           {/* chimney */}
           <rect x="88" y="10" width="10" height="16" fill="#6B4226" />
+          <rect x="87" y="9" width="12" height="3" fill="#5A3820" />
 
           {/* smoke */}
           {active && (
