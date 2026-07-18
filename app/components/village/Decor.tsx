@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { depthOf, toWorld } from '../../lib/village/isometric';
-import { WATERFALL_TILE, WINDMILL_TILE, generateDecor } from '../../lib/village/layout';
+import { WATERFALL_TILE, WINDMILL_TILE, generateDecor } from '../../lib/village/map';
 
 function Tree({ sway }: { sway: number }) {
   return (

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import type { BuildingDef } from '../../lib/village/layout';
+import type { BuildingDef } from '../../lib/village/map';
 
 interface BuildingProps {
   def: BuildingDef;

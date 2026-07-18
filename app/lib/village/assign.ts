@@ -1,5 +1,5 @@
 import type { Agent } from '../store';
-import { BUILDINGS, BuildingDef, HOUSES } from './layout';
+import { BUILDINGS, BuildingDef, HOUSES } from './map';
 
 export interface Villager {
   agent: Agent;

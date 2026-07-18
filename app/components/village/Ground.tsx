@@ -11,7 +11,7 @@ import {
   key,
   toWorld,
 } from '../../lib/village/isometric';
-import { RIVER_TILES, ROAD_TILES } from '../../lib/village/layout';
+import { RIVER_TILES, ROAD_TILES } from '../../lib/village/map';
 
 function diamondPoints(cx: number, cy: number, w: number, h: number) {
   return [
